@@ -263,7 +263,7 @@ func (m *AppModel) recalcLayout() {
 		chatW = 30
 	}
 	composerH := 3
-	chatH := h - composerH - 4 // borders + status bar
+	chatH := h - composerH - 5 // title bar + borders + status bar
 	if chatH < 5 {
 		chatH = 5
 	}
@@ -709,19 +709,28 @@ func (m *AppModel) View() string {
 		return lipgloss.Place(m.width, m.height, lipgloss.Center, lipgloss.Center,
 			stMuted.Render("please resize your terminal to at least 80×24"))
 	}
+	title := m.viewTitle()
 	nav := m.viewNav()
 	chat := m.viewChat()
 	right := m.viewMembers()
 	row := lipgloss.JoinHorizontal(lipgloss.Top, nav, chat, right)
 	status := m.viewStatus()
-	return lipgloss.JoinVertical(lipgloss.Left, row, status)
+	return lipgloss.JoinVertical(lipgloss.Left, title, row, status)
+}
+
+func (m *AppModel) viewTitle() string {
+	return stTitleBar.Width(m.width).Render("Terminal Social")
 }
 
 func (m *AppModel) viewNav() string {
 	w := 22
 	h := m.vp.Height + m.composer.Height() + 2
 	var lines []string
-	lines = append(lines, stTitle.Render("Rooms"))
+	header := "Rooms"
+	if m.pane == paneNav {
+		header = "▸ " + header
+	}
+	lines = append(lines, stTitle.Render(header))
 	curIdx := m.currentNavIdx()
 	items := m.navItems()
 	for i, it := range items {
@@ -770,7 +779,7 @@ func (m *AppModel) viewNav() string {
 		lines = append(lines, marker+label)
 	}
 	body := strings.Join(lines, "\n")
-	return stBorder.Width(w).Height(h).Render(body)
+	return paneBorder(m.pane == paneNav).Width(w).Height(h).Render(body)
 }
 
 func (m *AppModel) viewChat() string {
@@ -794,8 +803,11 @@ func (m *AppModel) viewChat() string {
 	hist := m.vp.View()
 	composer := m.composer.View()
 	w := m.vp.Width
+	if m.pane == paneChat {
+		header = stAccent.Render("▸ ") + header
+	}
 	body := lipgloss.JoinVertical(lipgloss.Left, header, hist, composer)
-	return stBorder.Width(w + 2).Render(body)
+	return paneBorder(m.pane == paneChat).Width(w).Render(body)
 }
 
 func (m *AppModel) viewMembers() string {
@@ -816,7 +828,11 @@ func (m *AppModel) viewMembers() string {
 	sort.Slice(online, func(i, j int) bool { return online[i].Handle < online[j].Handle })
 	sort.Slice(offline, func(i, j int) bool { return offline[i].Handle < offline[j].Handle })
 	var lines []string
-	lines = append(lines, stTitle.Render(fmt.Sprintf("Members (%d)", len(m.members))))
+	memHeader := fmt.Sprintf("Members (%d)", len(m.members))
+	if m.pane == paneMembers {
+		memHeader = "▸ " + memHeader
+	}
+	lines = append(lines, stTitle.Render(memHeader))
 	for _, u := range online {
 		role := ""
 		if u.Role == domain.RoleOwner {
@@ -829,11 +845,18 @@ func (m *AppModel) viewMembers() string {
 	for _, u := range offline {
 		lines = append(lines, stOfflineDot.Render("○")+" "+stMuted.Render(u.Handle))
 	}
-	return stBorder.Width(w).Height(h).Render(strings.Join(lines, "\n"))
+	return paneBorder(m.pane == paneMembers).Width(w).Height(h).Render(strings.Join(lines, "\n"))
 }
 
 func (m *AppModel) viewStatus() string {
-	left := fmt.Sprintf("online as @%s", m.user.Handle)
+	paneName := "rooms"
+	switch m.pane {
+	case paneChat:
+		paneName = "chat"
+	case paneMembers:
+		paneName = "members"
+	}
+	left := fmt.Sprintf("online as @%s  ·  pane: %s", m.user.Handle, stAccent.Render(paneName))
 	right := "[tab] panes  [?] help  [/] cmd  [ctrl+c] quit"
 	flash := ""
 	if time.Now().Before(m.flashUntil) {

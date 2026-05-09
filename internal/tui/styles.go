@@ -6,6 +6,7 @@ var (
 	colBorder    = lipgloss.Color("240")
 	colMuted     = lipgloss.Color("245")
 	colAccent    = lipgloss.Color("212")
+	colActive    = lipgloss.Color("51") // cyan — active pane border
 	colMention   = lipgloss.Color("214")
 	colSelf      = lipgloss.Color("117")
 	colError     = lipgloss.Color("196")
@@ -14,7 +15,8 @@ var (
 	colOnline    = lipgloss.Color("82")
 	colOffline   = lipgloss.Color("240")
 
-	stBorder = lipgloss.NewStyle().Border(lipgloss.NormalBorder()).BorderForeground(colBorder)
+	stBorder       = lipgloss.NewStyle().Border(lipgloss.NormalBorder()).BorderForeground(colBorder)
+	stBorderActive = lipgloss.NewStyle().Border(lipgloss.ThickBorder()).BorderForeground(colActive)
 	stTitle  = lipgloss.NewStyle().Bold(true).Foreground(colAccent)
 	stMuted  = lipgloss.NewStyle().Foreground(colMuted)
 	stAccent = lipgloss.NewStyle().Foreground(colAccent).Bold(true)
@@ -27,4 +29,15 @@ var (
 	stOnlineDot = lipgloss.NewStyle().Foreground(colOnline)
 	stOfflineDot = lipgloss.NewStyle().Foreground(colOffline)
 	stStatusBar = lipgloss.NewStyle().Foreground(colDimText).Background(lipgloss.Color("236")).Padding(0, 1)
+	stTitleBar  = lipgloss.NewStyle().Bold(true).Foreground(colActive).Background(lipgloss.Color("236")).Padding(0, 1).Align(lipgloss.Center)
 )
+
+// paneBorder returns the border style to use for a pane based on whether it
+// currently has focus. Active panes get a thick accent-colored border;
+// inactive panes get a thin muted border.
+func paneBorder(active bool) lipgloss.Style {
+	if active {
+		return stBorderActive
+	}
+	return stBorder
+}
