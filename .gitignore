@@ -1,5 +1,6 @@
 /tsocial
 /tsocial-admin
+/dist/
 *.db
 *.db-shm
 *.db-wal

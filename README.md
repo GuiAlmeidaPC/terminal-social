@@ -76,6 +76,18 @@ sudo systemctl enable --now tsocial
 sudo ufw allow 2222/tcp
 ```
 
+### Subsequent deploys
+
+Use the bundled `deploy.sh`: it cross-compiles, copies the binary, swaps it,
+and restarts the systemd unit. Schema migrations are idempotent so a
+restart-in-place is safe.
+
+```bash
+VPS=deploy@your-vps ./deploy.sh           # ship just the server
+VPS=deploy@your-vps ./deploy.sh admin     # also refresh tsocial-admin
+ARCH=arm64 VPS=deploy@your-vps ./deploy.sh   # ARM VPSes
+```
+
 ## Admin
 
 ```
