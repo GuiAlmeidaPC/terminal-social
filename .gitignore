@@ -1,0 +1,7 @@
+/tsocial
+/tsocial-admin
+*.db
+*.db-shm
+*.db-wal
+host_key
+host_key.pub
